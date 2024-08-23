@@ -1,28 +1,26 @@
+import subprocess
 import argparse
 import sys
 import os
-import time
 
+from modules.DependencyHandler import DependencyHandler
 
-parser = argparse.ArgumentParser(description='Start the program')
-parser.add_argument('-ip', '--ip', type=str, help='IP address of the server')
-parser.add_argument('-p', '--port', type=int, help='Port number of the server')
-parser.add_argument('-v', '--virtual', action='store_true', help='Use the Virtual Controller')
-parser.add_argument('-d', '--debug', action='store_true', help='Enable debug mode')
-
+parser = argparse.ArgumentParser(description='Start the application')
+parser.add_argument('--ip', type=str, default='localhost', help='IP address to bind to')
+parser.add_argument('--port', type=int, default=8080, help='Port to bind to')
+parser.add_argument('--debug', action='store_true', help='Enable debug mode')
 args = parser.parse_args()
 
-if args.ip is None:
-    print('IP address is required')
-    sys.exit(1)
-elif args.port is None:
-    print('Port number is required')
-    sys.exit(1)
-    
-if args.virtual:
-    os.system(f'python3 virtual_controller.py {"--d" if args.debug else ""} -ip {args.ip} -p {args.port}')
-    time.sleep(1)
+# Using the DependencyHandler class to install dependencies
+dependency_handler = DependencyHandler(install=True)
+dependency_handler.install_dependencies()
+
+# Start the application
+if args.debug:
+    subprocess.run(['python', 'src/app.py', '--ip', args.ip, '--port', str(args.port), '--debug'])
 else:
-    os.system(f'python3 controller.py {"--d" if args.debug else ""} -ip {args.ip} -p {args.port}')
-    time.sleep(1)
-    
+    subprocess.run(['python', 'src/app.py', '--ip', args.ip, '--port', str(args.port)])
+
+# Handle subprocess exit code
+if subprocess.CompletedProcess.returncode != 0:
+    sys.exit(1)
